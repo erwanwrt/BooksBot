@@ -1,0 +1,15 @@
+services:
+  booksbot:
+    build: .
+    container_name: booksbot
+    restart: always
+    env_file: .env
+    environment:
+      - DISPLAY=:99
+    volumes:
+      - browser_data:/app/browser_data
+      - downloads:/app/downloads
+
+volumes:
+  browser_data:
+  downloads:
