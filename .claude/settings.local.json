@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(python -m py_compile config.py && python -m py_compile anna_archive.py && python -m py_compile downloader.py && python -m py_compile mailer.py && python -m py_compile bot.py && python -m py_compile main.py && echo \"All files compile OK\")",
+      "WebFetch(domain:annas-archive.org)",
+      "WebFetch(domain:greasyfork.org)",
+      "WebFetch(domain:docs.searxng.org)",
+      "Bash(python -m py_compile anna_archive.py && python -m py_compile bot.py && echo \"OK\")",
+      "Bash(python -m py_compile anna_archive.py && echo \"OK\")",
+      "Bash(python -m py_compile anna_archive.py && python -m py_compile downloader.py && echo \"OK\")",
+      "Bash(python -m py_compile anna_archive.py && python -m py_compile main.py && echo \"OK\")",
+      "Bash(pip install:*)",
+      "Bash(playwright install:*)",
+      "Bash(python debug_html.py 2>&1)",
+      "Bash(python -c \"\nimport asyncio\nfrom playwright.async_api import async_playwright\nfrom playwright_stealth import stealth_async\n\nasync def main\\(\\):\n    async with async_playwright\\(\\) as p:\n        browser = await p.chromium.launch\\(headless=True\\)\n        context = await browser.new_context\\(\n            user_agent='Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36',\n            locale='en-US',\n        \\)\n        page = await context.new_page\\(\\)\n        await stealth_async\\(page\\)\n        await page.goto\\('https://annas-archive.gl/slow_download/f438762c2cf24f01e45c9cc4e5f43284/0/0', wait_until='domcontentloaded', timeout=30000\\)\n        await page.wait_for_timeout\\(7000\\)\n        html = await page.content\\(\\)\n        await browser.close\\(\\)\n\n    from bs4 import BeautifulSoup\n    soup = BeautifulSoup\\(html, 'html.parser'\\)\n    for tag in soup.select\\('script, style, link, meta'\\):\n        tag.decompose\\(\\)\n    text = soup.get_text\\(separator='\\\\n', strip=True\\)\n    lines = [l for l in text.split\\('\\\\n'\\) if l.strip\\(\\)]\n    for line in lines[:50]:\n        print\\(line.encode\\('ascii','replace'\\).decode\\(\\)[:150]\\)\n\nasyncio.run\\(main\\(\\)\\)\n\" 2>&1)",
+      "Bash(python -c \"from playwright_stealth import *; import playwright_stealth; print\\(dir\\(playwright_stealth\\)\\)\" 2>&1)",
+      "Bash(python -c \"\nimport asyncio\nfrom playwright.async_api import async_playwright\nfrom playwright_stealth import Stealth\n\nasync def main\\(\\):\n    async with async_playwright\\(\\) as p:\n        browser = await p.chromium.launch\\(headless=True\\)\n        context = await browser.new_context\\(\n            user_agent='Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36',\n            locale='en-US',\n        \\)\n        page = await context.new_page\\(\\)\n        async with Stealth\\(\\).use_async\\(page\\):\n            await page.goto\\('https://annas-archive.gl/slow_download/f438762c2cf24f01e45c9cc4e5f43284/0/0', wait_until='domcontentloaded', timeout=30000\\)\n            await page.wait_for_timeout\\(7000\\)\n            html = await page.content\\(\\)\n        await browser.close\\(\\)\n\n    from bs4 import BeautifulSoup\n    soup = BeautifulSoup\\(html, 'html.parser'\\)\n    for tag in soup.select\\('script, style, link, meta'\\):\n        tag.decompose\\(\\)\n    text = soup.get_text\\(separator='\\\\n', strip=True\\)\n    lines = [l for l in text.split\\('\\\\n'\\) if l.strip\\(\\)]\n    for line in lines[:50]:\n        print\\(line.encode\\('ascii','replace'\\).decode\\(\\)[:150]\\)\n\nasyncio.run\\(main\\(\\)\\)\n\" 2>&1)",
+      "Bash(python -c \"\nimport asyncio\nfrom playwright.async_api import async_playwright\nfrom playwright_stealth import Stealth\n\nasync def main\\(\\):\n    stealth = Stealth\\(\\)\n    async with async_playwright\\(\\) as p:\n        stealth.hook_playwright_context\\(p\\)\n        browser = await p.chromium.launch\\(headless=True\\)\n        context = await browser.new_context\\(\n            user_agent='Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36',\n            locale='en-US',\n        \\)\n        page = await context.new_page\\(\\)\n        await page.goto\\('https://annas-archive.gl/slow_download/f438762c2cf24f01e45c9cc4e5f43284/0/0', wait_until='domcontentloaded', timeout=30000\\)\n        await page.wait_for_timeout\\(7000\\)\n        html = await page.content\\(\\)\n        await browser.close\\(\\)\n\n    from bs4 import BeautifulSoup\n    soup = BeautifulSoup\\(html, 'html.parser'\\)\n    for tag in soup.select\\('script, style, link, meta'\\):\n        tag.decompose\\(\\)\n    text = soup.get_text\\(separator='\\\\n', strip=True\\)\n    lines = [l for l in text.split\\('\\\\n'\\) if l.strip\\(\\)]\n    for line in lines[:50]:\n        print\\(line.encode\\('ascii','replace'\\).decode\\(\\)[:150]\\)\n\nasyncio.run\\(main\\(\\)\\)\n\" 2>&1)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(python -m py_compile downloader.py && echo \"OK\")"
+    ]
+  }
+}

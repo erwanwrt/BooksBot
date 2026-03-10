@@ -1,0 +1,26 @@
+[Unit]
+Description=BooksBot Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=booksbot
+Group=booksbot
+WorkingDirectory=/opt/booksbot
+EnvironmentFile=/opt/booksbot/.env
+ExecStart=/opt/booksbot/venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+# Virtual display for Playwright (headless=False needs it)
+Environment=DISPLAY=:99
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/booksbot/downloads /opt/booksbot/browser_data
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
