@@ -36,7 +36,10 @@ _DOWNLOAD_URL_RE = re.compile(r'https?://(?!annas-archive)[^\s"<>]+\.epub[^\s"<>
 async def _fetch_page_headless(url: str, wait_selector: str | None = None) -> str:
     """Fetch a page using a headless browser (for search — no DDoS-Guard)."""
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
+        )
         context = await browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -65,7 +68,11 @@ async def _get_persistent_context(playwright) -> BrowserContext:
     return await playwright.chromium.launch_persistent_context(
         user_data_dir=BROWSER_DATA_DIR,
         headless=False,
-        args=["--disable-blink-features=AutomationControlled"],
+        args=[
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+        ],
         accept_downloads=True,
         locale="en-US",
     )
