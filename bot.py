@@ -9,7 +9,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from config import TELEGRAM_USER_ID, TELEGRAM_FILE_LIMIT, DOWNLOADS_DIR
+from config import TELEGRAM_ALLOWED_IDS, TELEGRAM_FILE_LIMIT, DOWNLOADS_DIR
 from anna_archive import search_books, download_book
 from downloader import cleanup_file, get_file_size
 from mailer import send_to_kindle
@@ -30,7 +30,7 @@ def authorized(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         user_id = update.effective_user.id if update.effective_user else 0
-        if user_id != TELEGRAM_USER_ID:
+        if user_id not in TELEGRAM_ALLOWED_IDS:
             logger.warning("Unauthorized access attempt by user %d", user_id)
             if update.message:
                 await update.message.reply_text("⛔ Accès non autorisé.")
