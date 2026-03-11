@@ -1,7 +1,6 @@
 import re
 import asyncio
 import logging
-import httpx
 from pathlib import Path
 from urllib.parse import urlencode
 from playwright.async_api import async_playwright, BrowserContext
@@ -13,13 +12,6 @@ logger = logging.getLogger(__name__)
 BROWSER_DATA_DIR = str(BASE_DIR / "browser_data")
 POLL_INTERVAL = 3  # seconds between checks for download link
 POLL_MAX_WAIT = 90  # max seconds to wait for countdown
-HTTP_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 LANGUAGE_MAP = {
     "fr": "fr",
@@ -181,16 +173,14 @@ async def search_books(query: str, language: str = "") -> list[dict]:
 
 
 async def download_book(detail_url: str, filepath: str) -> bool:
-    """Resolve the mirror download link via browser, then download the file via httpx.
+    """Download a book entirely via browser (needed to bypass mirror IP blocking).
 
     Flow:
     1. Browser: detail page → slow_download → wait countdown → extract mirror URL
-    2. httpx: download the epub from the external mirror (fast, no browser needed)
+    2. Browser: navigate to mirror URL → capture Playwright download → save file
 
     Returns True if file was downloaded successfully.
     """
-    # --- Phase 1: resolve mirror URL using browser (needed for DDoS-Guard) ---
-    download_url = None
     try:
         async with async_playwright() as p:
             context = await _get_persistent_context(p)
@@ -219,49 +209,51 @@ async def download_book(detail_url: str, filepath: str) -> bool:
                 await page.goto(slow_url, wait_until="domcontentloaded", timeout=30000)
                 download_url = await _poll_for_download_link(page)
 
+                if not download_url:
+                    logger.warning("Could not resolve download URL after waiting")
+                    return False
+
+                logger.info("Resolved mirror URL: %s", download_url[:150])
+
+                # Step 3: download via browser to bypass mirror IP blocking
+                logger.info("Starting browser download...")
+                try:
+                    async with page.expect_download(timeout=300000) as download_info:
+                        await page.goto(download_url)
+                    download = await download_info.value
+                    await download.save_as(filepath)
+                    logger.info("Browser download saved to %s", filepath)
+                except Exception as e:
+                    logger.warning("Browser download event failed (%s), trying direct navigation...", e)
+                    # Fallback: some mirrors respond with content directly (no download event)
+                    resp = await page.goto(download_url, wait_until="commit", timeout=300000)
+                    if resp and resp.ok:
+                        body = await resp.body()
+                        with open(filepath, "wb") as f:
+                            f.write(body)
+                        logger.info("Direct navigation download saved to %s", filepath)
+                    else:
+                        logger.error("Direct navigation failed (status %s)", resp.status if resp else "?")
+                        return False
+
             finally:
                 await context.close()
 
     except Exception as e:
-        logger.error("Failed to resolve download URL: %s", e)
-        return False
-
-    if not download_url:
-        logger.warning("Could not resolve download URL after waiting")
-        return False
-
-    logger.info("Resolved mirror URL: %s", download_url[:150])
-
-    # --- Phase 2: download file from external mirror via httpx (fast) ---
-    try:
-        async with httpx.AsyncClient(
-            headers=HTTP_HEADERS,
-            follow_redirects=True,
-            timeout=httpx.Timeout(connect=15, read=300, write=30, pool=15),
-        ) as client:
-            async with client.stream("GET", download_url) as resp:
-                if resp.status_code != 200:
-                    logger.error("Mirror download returned status %d", resp.status_code)
-                    return False
-
-                with open(filepath, "wb") as f:
-                    async for chunk in resp.aiter_bytes(65536):
-                        f.write(chunk)
-
-        size = Path(filepath).stat().st_size
-        if size < 1024:
-            logger.error("Downloaded file too small (%d bytes)", size)
-            Path(filepath).unlink()
-            return False
-
-        logger.info("Downloaded %s (%d bytes)", filepath, size)
-        return True
-
-    except Exception as e:
-        logger.error("Mirror download failed: %s", e)
+        logger.error("Download failed: %s", e)
         if Path(filepath).exists():
             Path(filepath).unlink()
         return False
+
+    # Validate file size
+    size = Path(filepath).stat().st_size
+    if size < 1024:
+        logger.error("Downloaded file too small (%d bytes)", size)
+        Path(filepath).unlink()
+        return False
+
+    logger.info("Downloaded %s (%d bytes)", filepath, size)
+    return True
 
 
 async def _poll_for_download_link(page, max_wait: int = POLL_MAX_WAIT) -> str | None:
