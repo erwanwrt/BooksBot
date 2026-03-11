@@ -217,24 +217,14 @@ async def download_book(detail_url: str, filepath: str) -> bool:
 
                 # Step 3: download via browser to bypass mirror IP blocking
                 logger.info("Starting browser download...")
-                try:
-                    async with page.expect_download(timeout=300000) as download_info:
+                async with page.expect_download(timeout=300000) as download_info:
+                    try:
                         await page.goto(download_url)
-                    download = await download_info.value
-                    await download.save_as(filepath)
-                    logger.info("Browser download saved to %s", filepath)
-                except Exception as e:
-                    logger.warning("Browser download event failed (%s), trying direct navigation...", e)
-                    # Fallback: some mirrors respond with content directly (no download event)
-                    resp = await page.goto(download_url, wait_until="commit", timeout=300000)
-                    if resp and resp.ok:
-                        body = await resp.body()
-                        with open(filepath, "wb") as f:
-                            f.write(body)
-                        logger.info("Direct navigation download saved to %s", filepath)
-                    else:
-                        logger.error("Direct navigation failed (status %s)", resp.status if resp else "?")
-                        return False
+                    except Exception:
+                        pass  # "Download is starting" error is expected
+                download = await download_info.value
+                await download.save_as(filepath)
+                logger.info("Browser download saved to %s", filepath)
 
             finally:
                 await context.close()
